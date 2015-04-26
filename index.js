@@ -43,9 +43,11 @@ function mapper(idata) {
       var colIndex = (col + (row * w)) * 4;
       var otherColIndex = (otherCol + (row * w)) * 4;
       // swap!
-      var temp = data[colIndex];
-      data[colIndex] = data[otherColIndex];
-      data[otherColIndex] = temp;
+      for (var colorIndex = 0; colorIndex < 4; colorIndex++) {
+        var temp = data[colIndex + colorIndex];
+        data[colIndex + colorIndex] = data[otherColIndex + colorIndex];
+        data[otherColIndex + colorIndex] = temp;
+      }
     }
   }
   // Loop through the subpixels, convoluting each using an edge-detection matrix.
@@ -74,5 +76,5 @@ function draw(v,c,bc,cw,ch, time) {
   // Draw the pixels onto the visible canvas
   c.putImageData(idata,0,0);
   // Start over!
-  //requestDraw(v,c,bc,cw,ch);
+  requestDraw(v,c,bc,cw,ch);
 }

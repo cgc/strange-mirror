@@ -32,6 +32,26 @@ if (navigator.getUserMedia) {
   console.log("getUserMedia not supported");
 }
 
+var images = [];
+
+function addImage(imageData) {
+  images.push([new Date().getTime(), imageData]);
+}
+
+function findImage(time) {
+  var minDiff = 10;
+  var minDiffImage;
+  for (var i = 0; i < images.length; i++) {
+    var imagePair = images[i];
+    var diff = Math.abs(imagePair[0] - time);
+    if (diff < minDiff) {
+      minDiff = diff;
+      minDiffImage = imagePair[1];
+    }
+  }
+  return minDiffImage;
+}
+
 function mapper(idata) {
   var data = idata.data;
   var w = idata.width;
@@ -50,12 +70,18 @@ function mapper(idata) {
       }
     }
   }
+  addImage(idata);
+  var maybeReplacement = findImage(new Date().getTime() - 30 * 1000);
   // Loop through the subpixels, convoluting each using an edge-detection matrix.
   //for(var i = 0; i < limit; i++) {
   //  if( i%4 == 3 ) continue;
   //  data[i] = 127 + 2*data[i] - data[i + 4] - data[i + w*4];
   //}
-  return idata;
+  if (maybeReplacement) {
+    return maybeReplacement;
+  } else {
+    return idata;
+  }
 }
 
 // pick the most dissimilar

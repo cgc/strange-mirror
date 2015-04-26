@@ -35,18 +35,22 @@ if (navigator.getUserMedia) {
 var images = [];
 
 function addImage(imageData) {
-  images.push([new Date().getTime(), imageData]);
+  images.push({
+    time: new Date().getTime(),
+    data: imageData
+  });
 }
 
 function findImage(time) {
-  var minDiff = 10;
+  var minDiff = Number.MAX_VALUE;
+  //var minDiff = 10; or would something like this be better?
   var minDiffImage;
   for (var i = 0; i < images.length; i++) {
-    var imagePair = images[i];
-    var diff = Math.abs(imagePair[0] - time);
+    var image = images[i];
+    var diff = Math.abs(image.time - time);
     if (diff < minDiff) {
       minDiff = diff;
-      minDiffImage = imagePair[1];
+      minDiffImage = image;
     }
   }
   return minDiffImage;
@@ -78,7 +82,8 @@ function mapper(idata) {
   //  data[i] = 127 + 2*data[i] - data[i + 4] - data[i + w*4];
   //}
   if (maybeReplacement) {
-    return maybeReplacement;
+    document.querySelector('.time-indicator').textContent = new Date(maybeReplacement.time).toJSON();
+    return maybeReplacement.data;
   } else {
     return idata;
   }

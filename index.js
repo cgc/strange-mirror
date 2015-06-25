@@ -155,7 +155,7 @@ function mapper(idata) {
   //}
   if (maybeReplacement && maybeReplacementEarlier) {
     document.querySelector('.time-indicator').textContent = new Date(maybeReplacement.time).toJSON();
-    idata = overlayByDifference(maybeReplacement.data, maybeReplacementEarlier.data, idata);
+    idata = overlayByDifference([maybeReplacement.data, maybeReplacementEarlier.data, idata]);
   }
   return idata;
 }

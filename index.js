@@ -73,11 +73,11 @@ function overlayByAverage(a, b) {
   return new ImageData(newData, w, h);
 }
 
-function euclideanDistance(a, b) {
+function euclideanDistance(a, b, bOffset) {
   // https://en.wikipedia.org/wiki/Euclidean_distance#n_dimensions
   var result = 0;
   for (var i = 0; i < a.length; i++) {
-    result += Math.pow(a[i] - b[i], 2);
+    result += Math.pow(a[i] - b[bOffset + i], 2);
   }
   return Math.sqrt(result);
 }
@@ -108,8 +108,7 @@ function overlayByDifference(a) {
       var maxImage;
       var maxValue = -1; // or -inf? or 0?
       images.forEach(function(image) {
-        var currentPixel = Array.prototype.slice.call(image.data, pixelIndex, pixelIndex + COLOR_COUNT);
-        var diff = euclideanDistance(avgColors, currentPixel);
+        var diff = euclideanDistance(avgColors, image.data, pixelIndex);
         if (diff > maxValue) {
           maxImage = image;
           maxValue = diff;

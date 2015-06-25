@@ -82,12 +82,12 @@ function euclideanDistance(a, b, bOffset) {
   return Math.sqrt(result);
 }
 
-function overlayByDifference(a) {
+function overlayByDifference(images) {
+  var a = images[0];
   var newData = new Uint8ClampedArray(a.data.length);
   var w = a.width;
   var h = a.height;
   var COLOR_COUNT = 4;
-  var images = Array.prototype.slice.call(arguments);
 
   for(var row = 0; row < h; row++) {
     for(var col = 0; col < w; col++) {
@@ -98,22 +98,24 @@ function overlayByDifference(a) {
       for (var colorIndex = 0; colorIndex < COLOR_COUNT; colorIndex++) {
         avgColors.push(0);
         var index = pixelIndex + colorIndex;
-        images.forEach(function(image) {
+        for (var i = 0; i < images.length; i++) {
+          var image = images[i];
           avgColors[colorIndex] += image.data[index];
-        });
+        }
         avgColors[colorIndex] /= images.length;
       }
 
       // find the furthest
       var maxImage;
       var maxValue = -1; // or -inf? or 0?
-      images.forEach(function(image) {
+      for (var i = 0; i < images.length; i++) {
+        var image = images[i];
         var diff = euclideanDistance(avgColors, image.data, pixelIndex);
         if (diff > maxValue) {
           maxImage = image;
           maxValue = diff;
         }
-      });
+      }
 
       for (var colorIndex = 0; colorIndex < COLOR_COUNT; colorIndex++) {
         var index = pixelIndex + colorIndex;

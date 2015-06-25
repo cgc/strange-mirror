@@ -88,15 +88,18 @@ function overlayByDifference(images) {
   var w = a.width;
   var h = a.height;
   var COLOR_COUNT = 4;
+  var avgColors = [];
+  for (var colorIndex = 0; colorIndex < COLOR_COUNT; colorIndex++) {
+    avgColors.push(0);
+  }
 
   for(var row = 0; row < h; row++) {
     for(var col = 0; col < w; col++) {
-      var avgColors = [];
       var pixelIndex = (col + (row * w)) * COLOR_COUNT;
 
       // average them
       for (var colorIndex = 0; colorIndex < COLOR_COUNT; colorIndex++) {
-        avgColors.push(0);
+        avgColors[colorIndex] = 0;
         var index = pixelIndex + colorIndex;
         for (var i = 0; i < images.length; i++) {
           var image = images[i];

@@ -1,0 +1,30 @@
+{
+  "name": "strange-mirror",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "gulp dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cgc/strange-mirror.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cgc/strange-mirror/issues"
+  },
+  "homepage": "https://github.com/cgc/strange-mirror",
+  "devDependencies": {
+    "browserify": "^10.2.4",
+    "express": "^4.13.0",
+    "gulp": "^3.9.0",
+    "gulp-util": "^3.0.6",
+    "morgan": "^1.6.0",
+    "serve-static": "^1.10.0",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0"
+  }
+}

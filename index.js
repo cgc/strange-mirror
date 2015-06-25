@@ -56,6 +56,80 @@ function findImage(time) {
   return minDiffImage;
 }
 
+function overlayByAverage(a, b) {
+  var newData = new Uint8ClampedArray(a.data.length);
+  var w = a.width;
+  var h = a.height;
+
+  for(var row = 0; row < h; row++) {
+    for(var col = 0; col < w; col++) {
+      for (var colorIndex = 0; colorIndex < 4; colorIndex++) {
+        var index = ((col + (row * w)) * 4) + colorIndex;
+        newData[index] = (a.data[index] + b.data[index]) / 2;
+      }
+    }
+  }
+
+  return new ImageData(newData, w, h);
+}
+
+function euclideanDistance(a, b, bOffset) {
+  // https://en.wikipedia.org/wiki/Euclidean_distance#n_dimensions
+  var result = 0;
+  for (var i = 0; i < a.length; i++) {
+    result += Math.pow(a[i] - b[bOffset + i], 2);
+  }
+  return Math.sqrt(result);
+}
+
+function overlayByDifference(images) {
+  var a = images[0];
+  var newData = new Uint8ClampedArray(a.data.length);
+  var w = a.width;
+  var h = a.height;
+  var COLOR_COUNT = 4;
+  var avgColors = [];
+  for (var colorIndex = 0; colorIndex < COLOR_COUNT; colorIndex++) {
+    avgColors.push(0);
+  }
+
+  for(var row = 0; row < h; row++) {
+    for(var col = 0; col < w; col++) {
+      var pixelIndex = (col + (row * w)) * COLOR_COUNT;
+
+      // average them
+      for (var colorIndex = 0; colorIndex < COLOR_COUNT; colorIndex++) {
+        avgColors[colorIndex] = 0;
+        var index = pixelIndex + colorIndex;
+        for (var i = 0; i < images.length; i++) {
+          var image = images[i];
+          avgColors[colorIndex] += image.data[index];
+        }
+        avgColors[colorIndex] /= images.length;
+      }
+
+      // find the furthest
+      var maxImage;
+      var maxValue = -1; // or -inf? or 0?
+      for (var i = 0; i < images.length; i++) {
+        var image = images[i];
+        var diff = euclideanDistance(avgColors, image.data, pixelIndex);
+        if (diff > maxValue) {
+          maxImage = image;
+          maxValue = diff;
+        }
+      }
+
+      for (var colorIndex = 0; colorIndex < COLOR_COUNT; colorIndex++) {
+        var index = pixelIndex + colorIndex;
+        newData[index] = maxImage.data[index];
+      }
+    }
+  }
+
+  return new ImageData(newData, w, h);
+}
+
 function mapper(idata) {
   var data = idata.data;
   var w = idata.width;
@@ -75,18 +149,18 @@ function mapper(idata) {
     }
   }
   addImage(idata);
+  var maybeReplacementEarlier = findImage(new Date().getTime() - 15 * 1000);
   var maybeReplacement = findImage(new Date().getTime() - 30 * 1000);
   // Loop through the subpixels, convoluting each using an edge-detection matrix.
   //for(var i = 0; i < limit; i++) {
   //  if( i%4 == 3 ) continue;
   //  data[i] = 127 + 2*data[i] - data[i + 4] - data[i + w*4];
   //}
-  if (maybeReplacement) {
+  if (maybeReplacement && maybeReplacementEarlier) {
     document.querySelector('.time-indicator').textContent = new Date(maybeReplacement.time).toJSON();
-    return maybeReplacement.data;
-  } else {
-    return idata;
+    idata = overlayByDifference([maybeReplacement.data, maybeReplacementEarlier.data, idata]);
   }
+  return idata;
 }
 
 // pick the most dissimilar

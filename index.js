@@ -56,6 +56,23 @@ function findImage(time) {
   return minDiffImage;
 }
 
+function overlayByAverage(a, b) {
+  var newData = new Uint8ClampedArray(a.data.length);
+  var w = a.width;
+  var h = a.height;
+
+  for(var row = 0; row < h; row++) {
+    for(var col = 0; col < w; col++) {
+      for (var colorIndex = 0; colorIndex < 4; colorIndex++) {
+        var index = ((col + (row * w)) * 4) + colorIndex;
+        newData[index] = (a.data[index] + b.data[index]) / 2;
+      }
+    }
+  }
+
+  return new ImageData(newData, w, h);
+}
+
 function mapper(idata) {
   var data = idata.data;
   var w = idata.width;
@@ -83,10 +100,9 @@ function mapper(idata) {
   //}
   if (maybeReplacement) {
     document.querySelector('.time-indicator').textContent = new Date(maybeReplacement.time).toJSON();
-    return maybeReplacement.data;
-  } else {
-    return idata;
+    idata = overlayByAverage(maybeReplacement.data, idata);
   }
+  return idata;
 }
 
 // pick the most dissimilar

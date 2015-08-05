@@ -1,3 +1,5 @@
+var GMM = require('./gaussian-mixture-model');
+
 navigator.getUserMedia = navigator.getUserMedia ||
 navigator.webkitGetUserMedia ||
 navigator.mozGetUserMedia;
@@ -154,6 +156,45 @@ var ImageDataUtils = {
   }
 };
 
+function rgb2gray(data, offset) {
+  // copied from http://www.mathworks.com/help/matlab/ref/rgb2gray.html#moreabout
+  return 0.2989 * data[offset] +
+    0.5870 * data[offset + 1] +
+    0.1140 * data[offset + 2];
+}
+
+var gmms;
+function updateGMMAndRemoveBackground(image) {
+  var COLOR_COUNT = 4;
+
+  if (!gmms) {
+    gmms = new Array(image.data.length / COLOR_COUNT);
+    for (var i = 0; i < image.data.length; i += COLOR_COUNT) {
+      gmms[i / COLOR_COUNT] = new GMM();
+    }
+  }
+
+  var newData = new Uint8ClampedArray(image.data.length);
+
+  for (var i = 0; i < image.data.length; i += COLOR_COUNT) {
+    var intensity = rgb2gray(image.data, i);
+    var gmm = gmms[i / COLOR_COUNT];
+    gmm.update(intensity);
+    if (gmm.isBackground(intensity)) {
+      newData[i] = image.data[i];
+      newData[i + 1] = image.data[i + 1];
+      newData[i + 2] = image.data[i + 2];
+      newData[i + 3] = 255;
+    }
+  }
+  return new ImageData(newData, image.width, image.height);
+}
+
+function updateAndRemoveBackground(idata) {
+  updateBackground(idata);
+  return ImageDataUtils.getForeground(idata, background);
+}
+
 var background;
 var backgrounds = [];
 var backgroundLimit = 20;
@@ -258,8 +299,10 @@ function mapper(idata) {
     }
   }
   addImage(idata);
-  updateBackground(idata);
-  idata.foreground = ImageDataUtils.getForeground(idata, background);
+
+  // idata.foreground = updateAndRemoveBackground(idata);
+  idata.foreground = updateGMMAndRemoveBackground(idata);
+
   var maybeReplacementEarlier = findImage(new Date().getTime() - 15 * 1000);
   var maybeReplacement = findImage(new Date().getTime() - 30 * 1000);
   // Loop through the subpixels, convoluting each using an edge-detection matrix.
@@ -269,11 +312,11 @@ function mapper(idata) {
   //}
   if (maybeReplacement && maybeReplacementEarlier) {
     document.querySelector('.time-indicator').textContent = new Date(maybeReplacement.time).toJSON();
-    displayDebugInfo(background, [
+    /*displayDebugInfo(background, [
       idata,
       maybeReplacementEarlier.data,
       maybeReplacement.data
-    ]);
+    ]);*/
     idata = overlayForeground([
       idata.foreground,
       maybeReplacementEarlier.data.foreground,

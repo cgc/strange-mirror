@@ -13,6 +13,7 @@ function GMM(options) {
 
 GMM.prototype = {
   isBackground: function(value) {
+    // XXX remove need to sort by keeping list sorted when modifying it
     var sorted = _.sortBy(this.gaussians, function(gaussian) {
       // -1 for descending sort.
       return -1 * this._backgroundGaussianMetric(gaussian);

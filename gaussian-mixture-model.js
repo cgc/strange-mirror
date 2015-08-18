@@ -1,10 +1,13 @@
 var _ = require('underscore');
+var Heap = require('heap');
 
 function GMM(options) {
   // from http://www.cs.utexas.edu/~grauman/courses/fall2009/slides/lecture9_background.pdf
   options = options || {};
 
-  this.gaussians = [];
+  this.gaussians = new Heap(function(a, b) {
+    return this._backgroundGaussianMetric(a) - this._backgroundGaussianMetric(b);
+  }.bind(this));
   this.matchThreshold = 2.5;
   this.alpha = options.alpha || 1/50;
   this.K = options.K || 5;
@@ -13,14 +16,11 @@ function GMM(options) {
 
 GMM.prototype = {
   isBackground: function(value) {
-    // XXX remove need to sort by keeping list sorted when modifying it
-    var sorted = _.sortBy(this.gaussians, function(gaussian) {
-      // -1 for descending sort.
-      return -1 * this._backgroundGaussianMetric(gaussian);
-    }.bind(this));
+    var sorted = this.gaussians.nodes;
 
     var total = 0;
-    for (var i = 0; i < sorted.length; i++) {
+    // since gaussian nodes are in ascending order, we should process in reverse.
+    for (var i = sorted.length - 1; i >= 0; i--) {
       var gaussian = sorted[i];
       if (total > this.T) {
         break;
@@ -33,29 +33,41 @@ GMM.prototype = {
     return false;
   },
   update: function(value) {
-    var matched = _.find(this.gaussians, function(gaussian) {
-      return this._gaussianValueMatch(gaussian, value);
-    }.bind(this));
+    var matched;
+    var sorted = this.gaussians.nodes;
+    // since gaussian nodes are in ascending order, we should process in reverse.
+    for (var i = sorted.length - 1; i >= 0; i--) {
+      var gaussian = sorted[i];
+      if (this._gaussianValueMatch(gaussian, value)) {
+        matched = gaussian;
+        break;
+      }
+    }
 
     if (matched) {
+      // Since _updateGaussian negatively affects all elements besides the matched value
+      // we might only need to update the place of the matched item?
       this._updateGaussian(matched, value);
+      this.gaussians.updateItem(matched);
     } else {
-      if (this.gaussians.length >= this.K) {
-        var leastProbablyBackground = _.min(this.gaussians, function(gaussian) {
-          return this._backgroundGaussianMetric(gaussian);
-        }.bind(this));
-        this.gaussians = _.without(this.gaussians, leastProbablyBackground);
-      }
       this._newDistribution(value);
     }
   },
   _newDistribution: function(value) {
-    this.gaussians.push({
-      mu: value,
-      // should sigmaSquared be a parameter? what's a good value for this?
-      sigmaSquared: Math.pow(8, 2),
-      omega: this.alpha
-    });
+    var instance;
+
+    // reusing instances as a performance optimization.
+    if (this.gaussians.size() >= this.K) {
+      instance = this.gaussians.pop();
+    } else {
+      instance = {};
+    }
+
+    instance.mu = value;
+    // should sigmaSquared be a parameter? what's a good value for this?
+    instance.sigmaSquared = Math.pow(8, 2);
+    instance.omega = this.alpha;
+    this.gaussians.push(instance);
   },
   _normalDistribution: function(gaussian, value) {
     return Math.exp(-1 * Math.pow(value - gaussian.mu, 2) / (2 * gaussian.sigmaSquared)) /
@@ -66,8 +78,9 @@ GMM.prototype = {
     gaussian.mu = (1 - rho) * gaussian.mu + rho * newValue;
     gaussian.sigmaSquared = (1 - rho) * gaussian.sigmaSquared +
       rho * Math.pow(newValue - gaussian.mu, 2);
-    for (var i = 0; i < this.gaussians.length; i++) {
-      var g = this.gaussians[i];
+    var gaussians = this.gaussians.nodes;
+    for (var i = 0; i < gaussians.length; i++) {
+      var g = gaussians[i];
       var M = g === gaussian ? 1 : 0;
       g.omega = (1 - this.alpha) * g.omega + this.alpha * M;
     }

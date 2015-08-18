@@ -180,7 +180,7 @@ function updateGMMAndRemoveBackground(image) {
     var intensity = rgb2gray(image.data, i);
     var gmm = gmms[i / COLOR_COUNT];
     gmm.update(intensity);
-    if (gmm.isBackground(intensity)) {
+    if (!gmm.isBackground(intensity)) {
       newData[i] = image.data[i];
       newData[i + 1] = image.data[i + 1];
       newData[i + 2] = image.data[i + 2];

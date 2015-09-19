@@ -18,13 +18,16 @@
   },
   "homepage": "https://github.com/cgc/strange-mirror",
   "devDependencies": {
+    "babelify": "^6.3.0",
     "browserify": "^10.2.4",
     "express": "^4.13.0",
     "gulp": "^3.9.0",
     "gulp-util": "^3.0.6",
+    "lodash": "^3.10.1",
     "morgan": "^1.6.0",
     "serve-static": "^1.10.0",
     "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0"
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.4.0"
   }
 }

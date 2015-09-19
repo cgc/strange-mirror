@@ -1,4 +1,4 @@
-var GMM = require('../gaussian-mixture-model');
+var GMM = require('../app/gaussian-mixture-model');
 var assert = require('assert');
 
 describe('the gaussian mixture model', function() {

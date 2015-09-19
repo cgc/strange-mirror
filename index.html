@@ -1,12 +1,19 @@
 <!doctype html>
 <html>
 <head>
-  <script type="text/javascript" src="dist/index.js" ></script>
   <link rel="stylesheet" href="index.css" ></link>
 </head>
 <body>
-  <canvas></canvas>
+  <ol>
+    <li>Put your computer on a surface that won't move.</li>
+    <li class="BackgroundCapture">
+      <canvas class="BackgroundCapture-canvas"></canvas>
+      <a class="BackgroundCapture-capture" href="#">Capture the background.</a>
+    </li>
+  </ol>
+  <canvas class="mirror"></canvas>
   <div class="time-indicator"></div>
   <video class="hide"></video>
+  <script type="text/javascript" src="dist/app/index.js"></script>
 </body>
 </html>

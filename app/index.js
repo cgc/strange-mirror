@@ -9,7 +9,7 @@ const context = canvas.getContext('2d');
 const back = document.createElement('canvas');
 const backcontext = back.getContext('2d');
 
-let background;
+let capturedBackground;
 
 function main() {
   userVideoToCanvas.init({
@@ -26,8 +26,9 @@ function main() {
   });
 }
 
-captureBackground.then((backgroundArgument) => {
-  background = backgroundArgument;
+captureBackground.then((background) => {
+  horizontalFlip(background);
+  capturedBackground = background;
   main();
 });
 
@@ -82,35 +83,6 @@ function euclideanDistance(a, b, bOffset) {
   }
   return Math.sqrt(result);
 }
-
-function rgbDistance(a, aOffset, b, bOffset) {
-  return Math.sqrt(
-    (a[aOffset] - b[bOffset]) - (a[aOffset] - b[bOffset]) +
-    (a[aOffset + 1] - b[bOffset + 1]) - (a[aOffset + 1] - b[bOffset + 1]) +
-    (a[aOffset + 2] - b[bOffset + 2]) - (a[aOffset + 2] - b[bOffset + 2])
-  );
-}
-
-/*function overlayByDifference(images) {
-  const a = images[0];
-  const newData = new Uint8ClampedArray(a.data.length);
-  const COLOR_COUNT = 4;
-
-  for(let i = 0; i < a.data.length; i += COLOR_COUNT) {
-    // find the furthest
-    for (let imageIndex = 0; imageIndex < images.length; imageIndex++) {
-      const dist = rgbDistance(a.data, i, background.data, i);
-      if (dist < 10) {
-
-      }
-      var image = images[imageIndex];
-      var index = pixelIndex + colorIndex;
-      newData[index] = maxImage.data[index];
-    }
-  }
-
-  return new ImageData(newData, a.width, a.height);
-}*/
 
 function overlayByDifference(images) {
   var a = images[0];
@@ -306,7 +278,7 @@ function displayDebugInfo(background, images) {
   showImage(getImage('image2'), images[2].foreground);
 }
 
-function mapper(idata) {
+function horizontalFlip(idata) {
   var data = idata.data;
   var w = idata.width;
   var h = idata.height;
@@ -324,10 +296,15 @@ function mapper(idata) {
       }
     }
   }
+}
+
+function mapper(idata) {
+  horizontalFlip(idata);
   addImage(idata);
 
   // idata.foreground = updateAndRemoveBackground(idata);
-  idata.foreground = updateGMMAndRemoveBackground(idata);
+  // idata.foreground = updateGMMAndRemoveBackground(idata);
+  idata.foreground = ImageDataUtils.getForeground(idata, capturedBackground);
 
   var maybeReplacementEarlier = findImage(new Date().getTime() - 15 * 1000);
   var maybeReplacement = findImage(new Date().getTime() - 30 * 1000);
@@ -338,7 +315,7 @@ function mapper(idata) {
   //}
   if (maybeReplacement && maybeReplacementEarlier) {
     document.querySelector('.time-indicator').textContent = new Date(maybeReplacement.time).toJSON();
-    /*displayDebugInfo(background, [
+    /*displayDebugInfo(capturedBackground, [
       idata,
       maybeReplacementEarlier.data,
       maybeReplacement.data
@@ -346,7 +323,8 @@ function mapper(idata) {
     idata = overlayForeground([
       idata.foreground,
       maybeReplacementEarlier.data.foreground,
-      maybeReplacement.data.foreground
+      maybeReplacement.data.foreground,
+      capturedBackground
     ]);
   }
   return idata;

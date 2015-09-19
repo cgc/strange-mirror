@@ -3,7 +3,6 @@ var browserify = require('browserify');
 var watchify = require('watchify');
 var babelify = require('babelify');
 var gutil = require('gulp-util');
-var glslify = require('glslify');
 var source = require('vinyl-source-stream');
 var buffer = require('vinyl-buffer');
 var express = require('express');
